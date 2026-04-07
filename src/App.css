@@ -435,12 +435,16 @@
   place-items: center;
   padding: 16px;
   z-index: 20;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
   width: min(100%, 520px);
   border-radius: 28px;
   padding: 24px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .modal-header {
