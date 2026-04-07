@@ -1,5 +1,31 @@
-const CACHE_NAME = 'coupon-book-v1'
+const CACHE_NAME = 'coupon-book-v2'
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/pwa-icon.svg']
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME)
+
+  try {
+    const networkResponse = await fetch(request)
+
+    if (networkResponse.ok) {
+      await cache.put(request, networkResponse.clone())
+    }
+
+    return networkResponse
+  } catch (error) {
+    const cachedResponse = await cache.match(request)
+
+    if (cachedResponse) {
+      return cachedResponse
+    }
+
+    if (request.mode === 'navigate') {
+      return cache.match('/index.html')
+    }
+
+    throw error
+  }
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
@@ -20,19 +46,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse
-      }
+  const requestUrl = new URL(event.request.url)
 
-      return fetch(event.request)
-        .then((networkResponse) => {
-          const responseClone = networkResponse.clone()
-          void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone))
-          return networkResponse
-        })
-        .catch(() => caches.match('/index.html'))
-    }),
-  )
+  if (requestUrl.origin !== self.location.origin) {
+    return
+  }
+
+  event.respondWith(networkFirst(event.request))
 })
