@@ -845,9 +845,6 @@ function App() {
               ) : null}
 
               <div className="modal-actions">
-                <button type="button" className="secondary-button" onClick={closeModal}>
-                  취소
-                </button>
                 <button type="submit" className="primary-button" disabled={isSaving}>
                   {isSaving ? '저장 중...' : editingCoupon ? '수정 저장' : '등록하기'}
                 </button>
