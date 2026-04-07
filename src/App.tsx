@@ -449,6 +449,14 @@ function App() {
       }))
 
     window.localStorage.setItem(PUSH_SUBSCRIPTION_STORAGE_KEY, JSON.stringify(subscription))
+    await fetch('/api/register-push-subscription', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        subscription,
+        userAgent: navigator.userAgent,
+      }),
+    })
     setPushStatus('enabled')
     return subscription
   }
