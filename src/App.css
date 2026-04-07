@@ -233,10 +233,18 @@
 }
 
 .lock-button {
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lock-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .topbar h1,
@@ -394,14 +402,15 @@
   flex-direction: column;
   gap: 10px;
   align-items: flex-end;
-  width: 124px;
-  min-width: 124px;
+  width: 80px;
+  min-width: 80px;
 }
 
 .corner-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  width: 80px;
 }
 
 .coupon-amount-empty {
@@ -457,7 +466,7 @@
   margin-top: 0;
   justify-content: center;
   gap: 8px;
-  width: 100%;
+  width: 80px;
   border-radius: 14px;
   padding: 10px 12px;
   background: #f8fafc;

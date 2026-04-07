@@ -757,8 +757,13 @@ function App() {
           </div>
           <h1>나의 쿠폰북</h1>
         </div>
-        <button type="button" className="secondary-button lock-button" onClick={handleLock}>
-          잠금
+        <button
+          type="button"
+          className="secondary-button lock-button"
+          aria-label="잠금"
+          onClick={handleLock}
+        >
+          <LockIcon />
         </button>
       </header>
 
@@ -1099,6 +1104,34 @@ function CloseIcon() {
         stroke="currentColor"
         strokeLinecap="round"
         strokeWidth="1.8"
+      />
+    </svg>
+  )
+}
+
+function LockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7.5 11V8.75a4.5 4.5 0 1 1 9 0V11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.25 11h9.5a2 2 0 0 1 2 2v5.5a2.25 2.25 0 0 1-2.25 2.25h-9A2.25 2.25 0 0 1 5.25 18.5V13a2 2 0 0 1 2-2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 15.3v2.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
       />
     </svg>
   )
