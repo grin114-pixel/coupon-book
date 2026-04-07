@@ -318,6 +318,10 @@
   gap: 12px;
 }
 
+.coupon-section + .coupon-section {
+  margin-top: 16px;
+}
+
 .section-heading {
   margin: 8px 4px 0;
   color: #7c3aed;
@@ -412,15 +416,16 @@
   flex-direction: column;
   gap: 10px;
   align-items: flex-end;
-  width: 80px;
-  min-width: 80px;
+  width: 44px;
+  min-width: 44px;
 }
 
 .corner-actions {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   justify-content: flex-end;
-  width: 80px;
+  width: 44px;
 }
 
 .coupon-amount-empty {
@@ -443,17 +448,7 @@
   height: 34px;
 }
 
-.coupon-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
-  min-width: 120px;
-}
-
-.corner-actions {
-  gap: 8px;
-}
+/* duplicate coupon-actions styles removed */
 
 .icon-button {
   justify-content: center;
@@ -634,13 +629,9 @@
   }
 
   .coupon-actions {
-    width: 80px;
-    min-width: 80px;
+    width: 44px;
+    min-width: 44px;
     align-items: flex-end;
-  }
-
-  .complete-button {
-    width: 80px;
   }
 
   .modal-actions {

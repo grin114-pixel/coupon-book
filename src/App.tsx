@@ -536,17 +536,13 @@ function App() {
     }
   }
 
-  async function handleDeleteCoupon(coupon: CouponView, actionLabel: '사용 완료' | '삭제') {
+  async function handleDeleteCoupon(coupon: CouponView) {
     if (!supabaseReady) {
       setDataError('Supabase 환경 변수가 설정되지 않아 삭제할 수 없어요.')
       return
     }
 
-    const confirmed = window.confirm(
-      actionLabel === '사용 완료'
-        ? '이 쿠폰을 사용 완료로 처리하고 삭제할까요?'
-        : '이 쿠폰을 삭제할까요?',
-    )
+    const confirmed = window.confirm('이 쿠폰을 삭제할까요?')
 
     if (!confirmed) {
       return
@@ -562,7 +558,7 @@ function App() {
         throw error
       }
 
-      setStatusMessage(actionLabel === '사용 완료' ? '쿠폰을 사용 완료 처리했어요.' : '쿠폰을 삭제했어요.')
+      setStatusMessage('쿠폰을 삭제했어요.')
       await loadCoupons()
     } catch (error) {
       setDataError(getErrorMessage(error))
@@ -769,20 +765,11 @@ function App() {
                             type="button"
                             className="icon-button"
                             aria-label="쿠폰 삭제"
-                            onClick={() => handleDeleteCoupon(coupon, '삭제')}
+                            onClick={() => handleDeleteCoupon(coupon)}
                           >
                             <DeleteIcon />
                           </button>
                         </div>
-
-                        <button
-                          type="button"
-                          className="complete-button"
-                          onClick={() => handleDeleteCoupon(coupon, '사용 완료')}
-                        >
-                          <CheckIcon />
-                          <span>사용 완료</span>
-                        </button>
                       </div>
                     </div>
                   </article>
@@ -969,21 +956,6 @@ function DeleteIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="1.7"
-      />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="m6.5 12.5 3.25 3.25L17.5 8"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.9"
       />
     </svg>
   )
