@@ -1,10 +1,8 @@
-/**
- * Vercel Serverless Function (Node.js)
- * - Uses CommonJS require for maximum compatibility.
- */
-const webpush = require('web-push')
+import webpushImport from 'web-push'
 
-module.exports = async function handler(req, res) {
+const webpush = webpushImport && webpushImport.default ? webpushImport.default : webpushImport
+
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.statusCode = 204
     res.end()
@@ -43,9 +41,8 @@ module.exports = async function handler(req, res) {
     return
   }
 
-  webpush.setVapidDetails(subject, vapidPublicKey, vapidPrivateKey)
-
   try {
+    webpush.setVapidDetails(subject, vapidPublicKey, vapidPrivateKey)
     await webpush.sendNotification(
       subscription,
       JSON.stringify({
