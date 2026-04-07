@@ -230,6 +230,12 @@
   margin-bottom: 20px;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .topbar-title {
   gap: 14px;
 }

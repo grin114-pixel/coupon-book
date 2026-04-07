@@ -27,8 +27,20 @@ type CouponFormState = {
 
 const AUTH_STORAGE_KEY = 'coupon-book.remembered-auth'
 const PIN_HASH_STORAGE_KEY = 'coupon-book.pin-hash'
+const PUSH_SUBSCRIPTION_STORAGE_KEY = 'coupon-book.push-subscription'
 const DEFAULT_PIN = '1234'
 const SETTINGS_ROW_ID = 'global'
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; i += 1) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
+}
 
 function getTodayInputValue() {
   const today = new Date()
@@ -131,6 +143,7 @@ function App() {
   const [currentPinInput, setCurrentPinInput] = useState('')
   const [newPinInput, setNewPinInput] = useState('')
   const [pinChangeError, setPinChangeError] = useState('')
+  const [pushStatus, setPushStatus] = useState<'unsupported' | 'idle' | 'enabled'>('idle')
   const [coupons, setCoupons] = useState<CouponView[]>([])
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false)
   const [dataError, setDataError] = useState('')
@@ -143,6 +156,7 @@ function App() {
 
   const defaultPin = String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim()
   const supabaseReady = isSupabaseConfigured()
+  const vapidPublicKey = String(import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '').trim()
 
   const defaultPinHashPromise = useMemo(() => hashPin(defaultPin), [defaultPin])
 
@@ -152,6 +166,22 @@ function App() {
     setIsAuthenticated(rememberedAuth)
     setIsCheckingRememberedAuth(false)
   }, [defaultPin])
+
+  useEffect(() => {
+    const supported =
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window
+
+    if (!supported) {
+      setPushStatus('unsupported')
+      return
+    }
+
+    const saved = window.localStorage.getItem(PUSH_SUBSCRIPTION_STORAGE_KEY)
+    setPushStatus(saved ? 'enabled' : 'idle')
+  }, [])
 
   useEffect(() => {
     if (!statusMessage) {
@@ -393,6 +423,53 @@ function App() {
     setAuthError('')
     setPin('')
     setIsAuthenticated(true)
+  }
+
+  async function ensurePushSubscription() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      throw new Error('이 기기에서는 푸시 알림을 지원하지 않아요.')
+    }
+
+    if (!vapidPublicKey) {
+      throw new Error('VAPID Public Key가 설정되지 않았어요. (VITE_VAPID_PUBLIC_KEY)')
+    }
+
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') {
+      throw new Error('알림 권한이 필요해요. (브라우저 설정에서 허용해 주세요.)')
+    }
+
+    const registration = await navigator.serviceWorker.ready
+    const existing = await registration.pushManager.getSubscription()
+    const subscription =
+      existing ??
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      }))
+
+    window.localStorage.setItem(PUSH_SUBSCRIPTION_STORAGE_KEY, JSON.stringify(subscription))
+    setPushStatus('enabled')
+    return subscription
+  }
+
+  async function sendTestPush() {
+    const subscription = await ensurePushSubscription()
+
+    const response = await fetch('/api/push-test', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        subscription,
+        message: '테스트 알림입니다.',
+        url: '/',
+      }),
+    })
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null
+      throw new Error(payload?.error || '푸시 발송에 실패했어요.')
+    }
   }
 
   function handleLock() {
@@ -670,14 +747,40 @@ function App() {
           </div>
           <h1>나의 쿠폰북</h1>
         </div>
-        <button
-          type="button"
-          className="secondary-button lock-button"
-          aria-label="잠금"
-          onClick={handleLock}
-        >
-          <LockIcon />
-        </button>
+        <div className="topbar-actions">
+          <button
+            type="button"
+            className="secondary-button lock-button"
+            aria-label={pushStatus === 'enabled' ? '테스트 알림 보내기' : '푸시 알림 켜기'}
+            onClick={() => {
+              void (async () => {
+                try {
+                  if (pushStatus === 'unsupported') {
+                    setStatusMessage('이 기기에서는 푸시 알림을 지원하지 않아요.')
+                    return
+                  }
+
+                  if (pushStatus === 'enabled') {
+                    await sendTestPush()
+                    setStatusMessage('테스트 알림을 보냈어요.')
+                    return
+                  }
+
+                  await ensurePushSubscription()
+                  setStatusMessage('푸시 알림을 켰어요. (다시 누르면 테스트 알림)')
+                } catch (error) {
+                  setStatusMessage(getErrorMessage(error))
+                }
+              })()
+            }}
+            disabled={pushStatus === 'unsupported'}
+          >
+            <BellIcon />
+          </button>
+          <button type="button" className="secondary-button lock-button" aria-label="잠금" onClick={handleLock}>
+            <LockIcon />
+          </button>
+        </div>
       </header>
 
       {!supabaseReady ? (
@@ -1009,6 +1112,27 @@ function LockIcon() {
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 3.75a4.6 4.6 0 0 1 4.6 4.6v2.1c0 1.7.6 3.3 1.7 4.6l.6.7H5.1l.6-.7a7.4 7.4 0 0 0 1.7-4.6v-2.1A4.6 4.6 0 0 1 12 3.75Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+      <path
+        d="M9.75 18.75a2.25 2.25 0 0 0 4.5 0"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.7"
       />
     </svg>
   )
