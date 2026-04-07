@@ -333,7 +333,7 @@
 .coupon-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 22px;
 }
 
 .coupon-card {

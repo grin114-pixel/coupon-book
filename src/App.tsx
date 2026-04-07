@@ -20,7 +20,6 @@ type CouponFormState = {
   name: string
   amount: string
   expiresAt: string
-  isRecurring: boolean
   imageFile: File | null
   imagePreview: string | null
   removeImage: boolean
@@ -44,7 +43,6 @@ function getEmptyForm(): CouponFormState {
     name: '',
     amount: '',
     expiresAt: getTodayInputValue(),
-    isRecurring: false,
     imageFile: null,
     imagePreview: null,
     removeImage: false,
@@ -66,10 +64,6 @@ function parseLocalDate(value: string) {
   return new Date(year, month - 1, day)
 }
 
-function getDaysInMonth(year: number, monthIndex: number) {
-  return new Date(year, monthIndex + 1, 0).getDate()
-}
-
 function toDateKey(date: Date) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -84,32 +78,8 @@ function formatDateLabel(date: Date) {
   return `${year}년${month}월${day}일`
 }
 
-function resolveEffectiveDate(expiresAt: string, isRecurring: boolean) {
-  const originalDate = parseLocalDate(expiresAt)
-
-  if (!isRecurring) {
-    return originalDate
-  }
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const originalDay = originalDate.getDate()
-  let candidate = originalDate
-
-  while (candidate < today) {
-    const nextMonth = candidate.getMonth() + 1
-    const nextYear = candidate.getFullYear() + Math.floor(nextMonth / 12)
-    const normalizedMonth = nextMonth % 12
-    const maxDay = getDaysInMonth(nextYear, normalizedMonth)
-    candidate = new Date(nextYear, normalizedMonth, Math.min(originalDay, maxDay))
-  }
-
-  return candidate
-}
-
 function normalizeCoupon(coupon: CouponRecord): CouponView {
-  const effectiveDate = resolveEffectiveDate(coupon.expires_at, coupon.is_recurring)
+  const effectiveDate = parseLocalDate(coupon.expires_at)
 
   return {
     ...coupon,
@@ -347,7 +317,6 @@ function App() {
       name: coupon.name,
       amount: formatAmountInput(String(coupon.amount)),
       expiresAt: coupon.expires_at,
-      isRecurring: coupon.is_recurring,
       imageFile: null,
       imagePreview: coupon.image_url,
       removeImage: false,
@@ -498,10 +467,6 @@ function App() {
     setForm((current) => ({ ...current, expiresAt: event.target.value }))
   }
 
-  function handleRecurringChange(event: ChangeEvent<HTMLInputElement>) {
-    setForm((current) => ({ ...current, isRecurring: event.target.checked }))
-  }
-
   async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
 
@@ -585,7 +550,7 @@ function App() {
         name: form.name.trim(),
         amount: parseAmount(form.amount),
         expires_at: form.expiresAt,
-        is_recurring: form.isRecurring,
+        is_recurring: false,
         image_url: imageUrl,
       }
 
@@ -921,16 +886,6 @@ function App() {
                 <span>사용 기한</span>
                 <input type="date" value={form.expiresAt} onChange={handleDateChange} />
               </label>
-
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={form.isRecurring}
-                  onChange={handleRecurringChange}
-                />
-                <span>매달 반복</span>
-              </label>
-              <p className="helper-text">체크하면 같은 날짜의 월간 쿠폰이 자동으로 다음 회차로 이어집니다.</p>
 
               <label className="field">
                 <span>이미지 첨부</span>
