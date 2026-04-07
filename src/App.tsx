@@ -487,10 +487,6 @@ function App() {
     })()
   }
 
-  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
-    setForm((current) => ({ ...current, name: event.target.value }))
-  }
-
   function handleAmountChange(event: ChangeEvent<HTMLInputElement>) {
     setForm((current) => ({
       ...current,
@@ -901,11 +897,12 @@ function App() {
             <form className="coupon-form" onSubmit={handleSaveCoupon}>
               <label className="field">
                 <span>쿠폰 이름</span>
-                <input
-                  type="text"
-                  placeholder="예: 카페 음료 쿠폰"
+                <textarea
+                  className="field-textarea"
+                  placeholder={"예: 카페 음료 쿠폰\n(엔터로 줄바꿈 가능)"}
+                  rows={2}
                   value={form.name}
-                  onChange={handleNameChange}
+                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 />
               </label>
 
