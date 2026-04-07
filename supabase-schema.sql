@@ -3,13 +3,36 @@ create extension if not exists pgcrypto;
 create table if not exists public.coupons (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  amount bigint not null check (amount > 0),
+  amount bigint not null default 0 check (amount >= 0),
   expires_at date not null,
   is_recurring boolean not null default false,
   image_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+do $$
+declare
+  constraint_name text;
+begin
+  select c.conname
+  into constraint_name
+  from pg_constraint c
+  join pg_class t on t.oid = c.conrelid
+  join pg_namespace n on n.oid = t.relnamespace
+  where n.nspname = 'public'
+    and t.relname = 'coupons'
+    and c.contype = 'c'
+    and pg_get_constraintdef(c.oid) like '%amount%';
+
+  if constraint_name is not null then
+    execute format('alter table public.coupons drop constraint %I', constraint_name);
+  end if;
+exception when others then
+  null;
+end $$;
+
+alter table public.coupons alter column amount set default 0;
 
 create or replace function public.set_updated_at()
 returns trigger

@@ -565,11 +565,6 @@ function App() {
       return
     }
 
-    if (!parseAmount(form.amount)) {
-      setDataError('금액을 입력해 주세요.')
-      return
-    }
-
     if (!form.expiresAt) {
       setDataError('사용 기한을 선택해 주세요.')
       return
@@ -762,7 +757,7 @@ function App() {
           </div>
           <h1>나의 쿠폰북</h1>
         </div>
-        <button type="button" className="secondary-button" onClick={handleLock}>
+        <button type="button" className="secondary-button lock-button" onClick={handleLock}>
           잠금
         </button>
       </header>
@@ -814,7 +809,9 @@ function App() {
                           {coupon.is_recurring ? <span className="chip">매달 반복</span> : null}
                         </div>
                         <h3>{coupon.name}</h3>
-                        <p className="coupon-amount">{coupon.amount.toLocaleString('ko-KR')}원</p>
+                        <p className="coupon-amount">
+                          {coupon.amount > 0 ? `${coupon.amount.toLocaleString('ko-KR')}원` : '금액 없음'}
+                        </p>
                       </div>
 
                       <div className="coupon-visual">
@@ -835,33 +832,35 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="corner-actions">
+                    <div className="coupon-actions">
+                      <div className="corner-actions">
+                        <button
+                          type="button"
+                          className="icon-button"
+                          aria-label="쿠폰 수정"
+                          onClick={() => openEditModal(coupon)}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-button"
+                          aria-label="쿠폰 삭제"
+                          onClick={() => handleDeleteCoupon(coupon, '삭제')}
+                        >
+                          <DeleteIcon />
+                        </button>
+                      </div>
+
                       <button
                         type="button"
-                        className="icon-button"
-                        aria-label="쿠폰 수정"
-                        onClick={() => openEditModal(coupon)}
+                        className="complete-button"
+                        onClick={() => handleDeleteCoupon(coupon, '사용 완료')}
                       >
-                        <EditIcon />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-button"
-                        aria-label="쿠폰 삭제"
-                        onClick={() => handleDeleteCoupon(coupon, '삭제')}
-                      >
-                        <DeleteIcon />
+                        <CheckIcon />
+                        <span>사용 완료</span>
                       </button>
                     </div>
-
-                    <button
-                      type="button"
-                      className="complete-button"
-                      onClick={() => handleDeleteCoupon(coupon, '사용 완료')}
-                    >
-                      <CheckIcon />
-                      <span>사용 완료</span>
-                    </button>
                   </article>
                 ))}
               </div>
@@ -985,24 +984,29 @@ function BookIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M6.5 4.5h10a2 2 0 0 1 2 2v11.5a1 1 0 0 1-1.53.85A4.5 4.5 0 0 0 14.5 18h-8a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2Z"
+        d="M7.25 6.25h9.5a1.9 1.9 0 0 1 1.9 1.9v1.2a1.45 1.45 0 0 0 0 2.9v3.3a1.45 1.45 0 0 0 0 2.9v1.2a1.9 1.9 0 0 1-1.9 1.9h-9.5a1.9 1.9 0 0 1-1.9-1.9v-1.2a1.45 1.45 0 0 0 0-2.9v-3.3a1.45 1.45 0 0 0 0-2.9v-1.2a1.9 1.9 0 0 1 1.9-1.9Z"
         fill="currentColor"
-        opacity="0.22"
+        opacity="0.2"
       />
       <path
-        d="M7 5.25h9.5A2.25 2.25 0 0 1 18.75 7.5v10.75M7 5.25A2.25 2.25 0 0 0 4.75 7.5v8.75A2.25 2.25 0 0 0 7 18.5h8.25"
+        d="M7.25 6.25h9.5a1.9 1.9 0 0 1 1.9 1.9v1.2a1.45 1.45 0 0 0 0 2.9v3.3a1.45 1.45 0 0 0 0 2.9v1.2a1.9 1.9 0 0 1-1.9 1.9h-9.5a1.9 1.9 0 0 1-1.9-1.9v-1.2a1.45 1.45 0 0 0 0-2.9v-3.3a1.45 1.45 0 0 0 0-2.9v-1.2a1.9 1.9 0 0 1 1.9-1.9Z"
         fill="none"
         stroke="currentColor"
-        strokeLinecap="round"
+        strokeWidth="1.6"
         strokeLinejoin="round"
-        strokeWidth="1.6"
       />
       <path
-        d="M8.5 9h6M8.5 12h6M8.5 15h3.25"
-        fill="none"
+        d="M12 8.2v7.6"
         stroke="currentColor"
-        strokeLinecap="round"
         strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeDasharray="1.6 2.2"
+      />
+      <path
+        d="M9.6 11h1.7M9.6 13h1.7"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
       />
     </svg>
   )

@@ -227,6 +227,17 @@
   gap: 14px;
 }
 
+.topbar-title h1 {
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.lock-button {
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+}
+
 .topbar h1,
 .pin-card h1,
 .modal-header h2,
@@ -294,7 +305,7 @@
 .section-heading {
   margin: 8px 4px 0;
   color: #7c3aed;
-  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-size: clamp(1.1rem, 3.4vw, 1.55rem);
 }
 
 .coupon-list {
@@ -350,8 +361,8 @@
 
 .coupon-amount {
   margin: 0;
-  color: #111827;
-  font-size: 1.25rem;
+  color: #64748b;
+  font-size: 1.05rem;
   font-weight: 800;
 }
 
@@ -392,10 +403,15 @@
   height: 34px;
 }
 
+.coupon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  min-width: 120px;
+}
+
 .corner-actions {
-  position: absolute;
-  top: 14px;
-  right: 14px;
   gap: 8px;
 }
 
@@ -417,7 +433,7 @@
 }
 
 .complete-button {
-  margin-top: 16px;
+  margin-top: 0;
   justify-content: center;
   gap: 8px;
   width: 100%;
@@ -572,6 +588,16 @@
   .coupon-card-body {
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .coupon-actions {
+    min-width: 0;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .corner-actions {
+    justify-content: flex-end;
   }
 
   .coupon-visual img,
