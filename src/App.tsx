@@ -467,8 +467,17 @@ function App() {
     })
 
     if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null
-      throw new Error(payload?.error || '푸시 발송에 실패했어요.')
+      const rawText = await response.text().catch(() => '')
+      const payload = (() => {
+        try {
+          return rawText ? (JSON.parse(rawText) as { error?: string }) : null
+        } catch {
+          return null
+        }
+      })()
+
+      const detail = payload?.error || rawText.trim().slice(0, 160)
+      throw new Error(detail || `푸시 발송에 실패했어요. (HTTP ${response.status})`)
     }
   }
 
