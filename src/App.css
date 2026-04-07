@@ -609,10 +609,26 @@
     min-width: 88px;
   }
 
-  .complete-button,
   .primary-button,
   .secondary-button {
     width: 100%;
+  }
+
+  .lock-button {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
+  .coupon-actions {
+    width: 80px;
+    min-width: 80px;
+    align-items: flex-end;
+  }
+
+  .complete-button {
+    width: 80px;
   }
 
   .modal-actions {
@@ -622,12 +638,6 @@
   .coupon-card-body {
     align-items: flex-start;
     gap: 12px;
-  }
-
-  .coupon-actions {
-    min-width: 0;
-    width: 100%;
-    align-items: stretch;
   }
 
   .corner-actions {
