@@ -321,8 +321,9 @@
 }
 
 .coupon-card-body {
+  display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   align-items: center;
 }
 
@@ -368,8 +369,8 @@
 
 .coupon-visual {
   justify-content: center;
-  width: 98px;
-  min-width: 98px;
+  width: 92px;
+  min-width: 92px;
 }
 
 .image-button {
@@ -382,9 +383,28 @@
 .coupon-visual img,
 .image-button,
 .coupon-placeholder {
-  width: 98px;
-  height: 98px;
+  width: 92px;
+  height: 92px;
   border-radius: 22px;
+}
+
+.coupon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  width: 124px;
+  min-width: 124px;
+}
+
+.corner-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.coupon-amount-empty {
+  opacity: 0;
 }
 
 .coupon-visual img {
@@ -560,7 +580,6 @@
     padding: 18px 14px 100px;
   }
 
-  .topbar,
   .preview-panel,
   .modal-actions {
     flex-direction: column;

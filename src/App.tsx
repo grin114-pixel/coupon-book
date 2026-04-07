@@ -809,9 +809,11 @@ function App() {
                           {coupon.is_recurring ? <span className="chip">매달 반복</span> : null}
                         </div>
                         <h3>{coupon.name}</h3>
-                        <p className="coupon-amount">
-                          {coupon.amount > 0 ? `${coupon.amount.toLocaleString('ko-KR')}원` : '금액 없음'}
-                        </p>
+                        {coupon.amount > 0 ? (
+                          <p className="coupon-amount">{coupon.amount.toLocaleString('ko-KR')}원</p>
+                        ) : (
+                          <p className="coupon-amount coupon-amount-empty">&nbsp;</p>
+                        )}
                       </div>
 
                       <div className="coupon-visual">
@@ -830,36 +832,36 @@ function App() {
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    <div className="coupon-actions">
-                      <div className="corner-actions">
+                      <div className="coupon-actions">
+                        <div className="corner-actions">
+                          <button
+                            type="button"
+                            className="icon-button"
+                            aria-label="쿠폰 수정"
+                            onClick={() => openEditModal(coupon)}
+                          >
+                            <EditIcon />
+                          </button>
+                          <button
+                            type="button"
+                            className="icon-button"
+                            aria-label="쿠폰 삭제"
+                            onClick={() => handleDeleteCoupon(coupon, '삭제')}
+                          >
+                            <DeleteIcon />
+                          </button>
+                        </div>
+
                         <button
                           type="button"
-                          className="icon-button"
-                          aria-label="쿠폰 수정"
-                          onClick={() => openEditModal(coupon)}
+                          className="complete-button"
+                          onClick={() => handleDeleteCoupon(coupon, '사용 완료')}
                         >
-                          <EditIcon />
-                        </button>
-                        <button
-                          type="button"
-                          className="icon-button"
-                          aria-label="쿠폰 삭제"
-                          onClick={() => handleDeleteCoupon(coupon, '삭제')}
-                        >
-                          <DeleteIcon />
+                          <CheckIcon />
+                          <span>사용 완료</span>
                         </button>
                       </div>
-
-                      <button
-                        type="button"
-                        className="complete-button"
-                        onClick={() => handleDeleteCoupon(coupon, '사용 완료')}
-                      >
-                        <CheckIcon />
-                        <span>사용 완료</span>
-                      </button>
                     </div>
                   </article>
                 ))}
