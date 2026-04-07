@@ -211,6 +211,10 @@
   border: 1px solid #e2e8f0;
 }
 
+.pin-change-panel button {
+  width: 100%;
+}
+
 .app-shell {
   max-width: 920px;
   margin: 0 auto;

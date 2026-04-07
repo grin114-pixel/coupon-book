@@ -583,77 +583,83 @@ function App() {
     return (
       <div className="auth-shell">
         <form className="pin-card" onSubmit={handlePinSubmit}>
-          <div className="app-badge">
-            <BookIcon />
-            <span>나의 쿠폰북</span>
-          </div>
-          <h1>4자리 PIN 입력</h1>
-          <label className="field">
-            <span>PIN 번호</span>
-            <input
-              type="password"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={4}
-              placeholder="0000"
-              value={pin}
-              onChange={handlePinChange}
-            />
-          </label>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => {
-              setIsChangingPin((value) => !value)
-              setPinChangeError('')
-              setCurrentPinInput('')
-              setNewPinInput('')
-            }}
-          >
-            PIN 변경하기
-          </button>
           {isChangingPin ? (
-            <div className="pin-change-panel">
+            <>
+              <h1>PIN 변경하기</h1>
+              <div className="pin-change-panel">
+                <label className="field">
+                  <span>현재 PIN</span>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="현재 PIN"
+                    value={currentPinInput}
+                    onChange={(event) => handlePinChangeDigits(setCurrentPinInput, event)}
+                  />
+                </label>
+                <label className="field">
+                  <span>새 PIN</span>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="새 PIN"
+                    value={newPinInput}
+                    onChange={(event) => handlePinChangeDigits(setNewPinInput, event)}
+                  />
+                </label>
+                {pinChangeError ? <p className="error-text">{pinChangeError}</p> : null}
+                <button type="button" className="secondary-button" onClick={() => void handlePinChangeSave()}>
+                  PIN 저장
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="app-badge">
+                <BookIcon />
+                <span>나의 쿠폰북</span>
+              </div>
+              <h1>4자리 PIN 입력</h1>
               <label className="field">
-                <span>현재 PIN</span>
+                <span>PIN 번호</span>
                 <input
                   type="password"
                   inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={4}
-                  placeholder="현재 PIN"
-                  value={currentPinInput}
-                  onChange={(event) => handlePinChangeDigits(setCurrentPinInput, event)}
+                  placeholder="0000"
+                  value={pin}
+                  onChange={handlePinChange}
                 />
               </label>
-              <label className="field">
-                <span>새 PIN</span>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  placeholder="새 PIN"
-                  value={newPinInput}
-                  onChange={(event) => handlePinChangeDigits(setNewPinInput, event)}
-                />
-              </label>
-              {pinChangeError ? <p className="error-text">{pinChangeError}</p> : null}
-              <button type="button" className="secondary-button" onClick={() => void handlePinChangeSave()}>
-                PIN 저장
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  setIsChangingPin(true)
+                  setPinChangeError('')
+                  setCurrentPinInput('')
+                  setNewPinInput('')
+                }}
+              >
+                PIN 변경하기
               </button>
-            </div>
-          ) : null}
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={rememberDevice}
-              onChange={(event) => setRememberDevice(event.target.checked)}
-            />
-            <span>이 기기 기억하기</span>
-          </label>
-          {authError ? <p className="error-text">{authError}</p> : null}
-          <button type="submit" className="primary-button">
-            입장하기
-          </button>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={rememberDevice}
+                  onChange={(event) => setRememberDevice(event.target.checked)}
+                />
+                <span>이 기기 기억하기</span>
+              </label>
+              {authError ? <p className="error-text">{authError}</p> : null}
+              <button type="submit" className="primary-button">
+                입장하기
+              </button>
+            </>
+          )}
         </form>
       </div>
     )
