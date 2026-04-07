@@ -233,9 +233,10 @@
 }
 
 .lock-button {
-  padding: 8px 12px;
-  border-radius: 14px;
-  font-size: 0.92rem;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .topbar h1,
@@ -457,12 +458,17 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  border-radius: 18px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 10px 12px;
   background: #f8fafc;
   color: #0f172a;
   font-weight: 800;
   border: 1px solid #e2e8f0;
+}
+
+.complete-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .empty-state {
