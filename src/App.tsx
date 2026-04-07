@@ -167,6 +167,7 @@ function App() {
   const [dataError, setDataError] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null)
   const [editingCoupon, setEditingCoupon] = useState<CouponView | null>(null)
   const [form, setForm] = useState<CouponFormState>(() => getEmptyForm())
   const [isSaving, setIsSaving] = useState(false)
@@ -672,10 +673,7 @@ function App() {
           <div className="app-icon">
             <BookIcon />
           </div>
-          <div>
-            <p className="eyebrow">PWA + Supabase</p>
-            <h1>나의 쿠폰북</h1>
-          </div>
+          <h1>나의 쿠폰북</h1>
         </div>
         <button type="button" className="secondary-button" onClick={handleLock}>
           잠금
@@ -700,14 +698,6 @@ function App() {
       {statusMessage ? <div className="toast-message">{statusMessage}</div> : null}
 
       <main className="content-area">
-        <section className="summary-card">
-          <div>
-            <p className="eyebrow">정렬 기준</p>
-            <h2>사용 기한이 가장 임박한 순서</h2>
-          </div>
-          <p className="summary-count">{coupons.length}개의 쿠폰</p>
-        </section>
-
         {isLoadingCoupons ? (
           <section className="empty-state">
             <p>쿠폰 목록을 불러오는 중입니다...</p>
@@ -735,18 +725,21 @@ function App() {
                       <div className="coupon-copy">
                         <div className="coupon-meta">
                           {coupon.is_recurring ? <span className="chip">매달 반복</span> : null}
-                          <span className="chip muted-chip">{coupon.effectiveDateKey}</span>
                         </div>
                         <h3>{coupon.name}</h3>
                         <p className="coupon-amount">{coupon.amount.toLocaleString('ko-KR')}원</p>
-                        <p className="coupon-expiry">
-                          사용 기한 {formatDateLabel(coupon.effectiveDate)}
-                        </p>
                       </div>
 
                       <div className="coupon-visual">
                         {coupon.image_url ? (
-                          <img src={coupon.image_url} alt={`${coupon.name} 썸네일`} />
+                          <button
+                            type="button"
+                            className="image-button"
+                            aria-label={`${coupon.name} 원본 이미지 보기`}
+                            onClick={() => setSelectedImage({ url: coupon.image_url!, name: coupon.name })}
+                          >
+                            <img src={coupon.image_url} alt={`${coupon.name} 썸네일`} />
+                          </button>
                         ) : (
                           <div className="coupon-placeholder">
                             <ImageIcon />
@@ -872,6 +865,28 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedImage ? (
+        <div className="modal-overlay image-viewer-overlay" role="presentation" onClick={() => setSelectedImage(null)}>
+          <div
+            className="image-viewer-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedImage.name} 원본 이미지`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="icon-button image-viewer-close"
+              aria-label="원본 이미지 닫기"
+              onClick={() => setSelectedImage(null)}
+            >
+              <CloseIcon />
+            </button>
+            <img src={selectedImage.url} alt={`${selectedImage.name} 원본`} />
           </div>
         </div>
       ) : null}

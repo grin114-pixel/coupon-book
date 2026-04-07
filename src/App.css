@@ -254,7 +254,6 @@
 }
 
 .notice-card,
-.summary-card,
 .empty-state {
   border-radius: 24px;
   padding: 22px;
@@ -286,19 +285,6 @@
   gap: 18px;
 }
 
-.summary-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.summary-count {
-  margin: 0;
-  color: #475569;
-  font-weight: 700;
-}
-
 .coupon-section {
   display: flex;
   flex-direction: column;
@@ -307,7 +293,7 @@
 
 .section-heading {
   margin: 8px 4px 0;
-  color: #0f172a;
+  color: #7c3aed;
   font-size: clamp(1.4rem, 4vw, 2rem);
 }
 
@@ -324,8 +310,9 @@
 }
 
 .coupon-card-body {
+  justify-content: space-between;
   gap: 16px;
-  align-items: stretch;
+  align-items: center;
 }
 
 .coupon-copy {
@@ -358,13 +345,13 @@
 .coupon-copy h3 {
   margin: 0 0 8px;
   color: #0f172a;
-  font-size: 1.15rem;
+  font-size: 1.35rem;
 }
 
 .coupon-amount {
-  margin: 0 0 6px;
+  margin: 0;
   color: #111827;
-  font-size: 1.55rem;
+  font-size: 1.25rem;
   font-weight: 800;
 }
 
@@ -374,7 +361,15 @@
   min-width: 98px;
 }
 
+.image-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
 .coupon-visual img,
+.image-button,
 .coupon-placeholder {
   width: 98px;
   height: 98px;
@@ -454,6 +449,33 @@
   box-shadow: 0 20px 38px rgba(37, 99, 235, 0.28);
 }
 
+.image-viewer-overlay {
+  padding: 24px;
+}
+
+.image-viewer-card {
+  position: relative;
+  width: min(100%, 720px);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-viewer-card img {
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  object-fit: contain;
+  border-radius: 28px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+}
+
+.image-viewer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -513,7 +535,6 @@
   .pin-card,
   .modal-card,
   .notice-card,
-  .summary-card,
   .empty-state,
   .coupon-card {
     border-radius: 22px;
@@ -524,8 +545,6 @@
   }
 
   .topbar,
-  .summary-card,
-  .coupon-card-body,
   .preview-panel,
   .modal-actions {
     flex-direction: column;
@@ -536,9 +555,8 @@
   }
 
   .coupon-visual {
-    width: 100%;
-    min-width: 0;
-    justify-content: flex-start;
+    width: 88px;
+    min-width: 88px;
   }
 
   .complete-button,
@@ -549,5 +567,17 @@
 
   .modal-actions {
     align-items: stretch;
+  }
+
+  .coupon-card-body {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .coupon-visual img,
+  .image-button,
+  .coupon-placeholder {
+    width: 88px;
+    height: 88px;
   }
 }
