@@ -127,13 +127,10 @@ function App() {
   const [rememberDevice, setRememberDevice] = useState(false)
   const [pin, setPin] = useState('')
   const [authError, setAuthError] = useState('')
-  const [activePinHash, setActivePinHash] = useState<string | null>(null)
   const [isChangingPin, setIsChangingPin] = useState(false)
   const [currentPinInput, setCurrentPinInput] = useState('')
   const [newPinInput, setNewPinInput] = useState('')
-  const [confirmPinInput, setConfirmPinInput] = useState('')
   const [pinChangeError, setPinChangeError] = useState('')
-  const [pinChangeMessage, setPinChangeMessage] = useState('')
   const [coupons, setCoupons] = useState<CouponView[]>([])
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false)
   const [dataError, setDataError] = useState('')
@@ -150,10 +147,9 @@ function App() {
   const defaultPinHashPromise = useMemo(() => hashPin(defaultPin), [defaultPin])
 
   useEffect(() => {
-    const savedPinHash = window.localStorage.getItem(PIN_HASH_STORAGE_KEY)
-    setRememberDevice(false)
-    setIsAuthenticated(true)
-    setActivePinHash(savedPinHash)
+    const rememberedAuth = window.localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
+    setRememberDevice(rememberedAuth)
+    setIsAuthenticated(rememberedAuth)
     setIsCheckingRememberedAuth(false)
   }, [defaultPin])
 
@@ -168,18 +164,6 @@ function App() {
 
     return () => window.clearTimeout(timeoutId)
   }, [statusMessage])
-
-  useEffect(() => {
-    if (!pinChangeMessage) {
-      return undefined
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setPinChangeMessage('')
-    }, 2500)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [pinChangeMessage])
 
   const loadCoupons = useCallback(async () => {
     if (!supabaseReady) {
@@ -250,17 +234,14 @@ function App() {
     try {
       const remoteHash = await ensureRemotePinHash()
       window.localStorage.setItem(PIN_HASH_STORAGE_KEY, remoteHash)
-      setActivePinHash(remoteHash)
       return remoteHash
     } catch {
       const saved = window.localStorage.getItem(PIN_HASH_STORAGE_KEY)
       if (saved) {
-        setActivePinHash(saved)
         return saved
       }
 
       const fallback = await defaultPinHashPromise
-      setActivePinHash(fallback)
       return fallback
     }
   }, [defaultPinHashPromise, ensureRemotePinHash])
@@ -274,6 +255,64 @@ function App() {
 
     void loadCoupons()
   }, [isAuthenticated, loadCoupons])
+
+  function handlePinChangeDigits(
+    setter: (value: string) => void,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    setter(event.target.value.replace(/\D/g, '').slice(0, 4))
+  }
+
+  async function handlePinChangeSave() {
+    setPinChangeError('')
+
+    if (currentPinInput.length !== 4) {
+      setPinChangeError('현재 PIN 4자리를 입력해 주세요.')
+      return
+    }
+
+    if (newPinInput.length !== 4) {
+      setPinChangeError('새 PIN 4자리를 입력해 주세요.')
+      return
+    }
+
+    try {
+      const expectedHash = await resolveExpectedPinHash()
+      const currentHash = await hashPin(currentPinInput)
+
+      if (currentHash !== expectedHash) {
+        setPinChangeError('현재 PIN 번호가 일치하지 않습니다.')
+        return
+      }
+
+      const nextHash = await hashPin(newPinInput)
+
+      if (supabaseReady) {
+        const supabase = getSupabaseClient()
+        const { error } = await supabase.from('app_settings').upsert({
+          id: SETTINGS_ROW_ID,
+          pin_hash: nextHash,
+        })
+
+        if (error) {
+          throw error
+        }
+      }
+
+      window.localStorage.setItem(PIN_HASH_STORAGE_KEY, nextHash)
+      window.localStorage.removeItem(AUTH_STORAGE_KEY)
+      setRememberDevice(false)
+      setIsAuthenticated(false)
+      setIsChangingPin(false)
+      setCurrentPinInput('')
+      setNewPinInput('')
+      setPin('')
+      setAuthError('')
+      setStatusMessage('PIN을 변경했어요. 다시 로그인해 주세요.')
+    } catch (error) {
+      setPinChangeError(getErrorMessage(error))
+    }
+  }
 
   const groupedCoupons = useMemo(() => {
     const groups = new Map<string, { label: string; coupons: CouponView[] }>()
@@ -370,90 +409,6 @@ function App() {
     if (authError) {
       setAuthError('')
     }
-  }
-
-  function handlePinFormFieldChange(
-    setter: (value: string) => void,
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    setter(event.target.value.replace(/\D/g, '').slice(0, 4))
-
-    if (pinChangeError) {
-      setPinChangeError('')
-    }
-
-    if (pinChangeMessage) {
-      setPinChangeMessage('')
-    }
-  }
-
-  function resetPinChangeForm() {
-    setCurrentPinInput('')
-    setNewPinInput('')
-    setConfirmPinInput('')
-    setPinChangeError('')
-    setPinChangeMessage('')
-  }
-
-  function togglePinChangeForm() {
-    setIsChangingPin((current) => {
-      const nextValue = !current
-
-      if (!nextValue) {
-        resetPinChangeForm()
-      }
-
-      return nextValue
-    })
-  }
-
-  function handlePinUpdate() {
-    void (async () => {
-      try {
-        const expectedHash = activePinHash ?? (await resolveExpectedPinHash())
-        const currentHash = await hashPin(currentPinInput)
-
-        if (currentHash !== expectedHash) {
-          setPinChangeError('현재 PIN 번호가 일치하지 않습니다.')
-          return
-        }
-
-        if (newPinInput.length !== 4) {
-          setPinChangeError('새 PIN 4자리를 입력해 주세요.')
-          return
-        }
-
-        if (newPinInput !== confirmPinInput) {
-          setPinChangeError('새 PIN 확인 값이 일치하지 않습니다.')
-          return
-        }
-
-        const nextHash = await hashPin(newPinInput)
-
-        if (supabaseReady) {
-          const supabase = getSupabaseClient()
-          const { error } = await supabase.from('app_settings').upsert({
-            id: SETTINGS_ROW_ID,
-            pin_hash: nextHash,
-          })
-
-          if (error) {
-            throw error
-          }
-        }
-
-        window.localStorage.setItem(PIN_HASH_STORAGE_KEY, nextHash)
-        setActivePinHash(nextHash)
-        setPinChangeMessage('PIN 번호를 변경했어요.')
-        setCurrentPinInput('')
-        setNewPinInput('')
-        setConfirmPinInput('')
-        setPin('')
-        setAuthError('')
-      } catch (error) {
-        setPinChangeError(getErrorMessage(error))
-      }
-    })()
   }
 
   function handleAmountChange(event: ChangeEvent<HTMLInputElement>) {
@@ -634,12 +589,7 @@ function App() {
           </div>
           <h1>4자리 PIN 입력</h1>
           <label className="field">
-            <span className="field-label-row">
-              <span>PIN 번호</span>
-              <button type="button" className="inline-button" onClick={togglePinChangeForm}>
-                {isChangingPin ? '닫기' : '변경하기'}
-              </button>
-            </span>
+            <span>PIN 번호</span>
             <input
               type="password"
               inputMode="numeric"
@@ -650,6 +600,18 @@ function App() {
               onChange={handlePinChange}
             />
           </label>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              setIsChangingPin((value) => !value)
+              setPinChangeError('')
+              setCurrentPinInput('')
+              setNewPinInput('')
+            }}
+          >
+            PIN 변경하기
+          </button>
           {isChangingPin ? (
             <div className="pin-change-panel">
               <label className="field">
@@ -660,7 +622,7 @@ function App() {
                   maxLength={4}
                   placeholder="현재 PIN"
                   value={currentPinInput}
-                  onChange={(event) => handlePinFormFieldChange(setCurrentPinInput, event)}
+                  onChange={(event) => handlePinChangeDigits(setCurrentPinInput, event)}
                 />
               </label>
               <label className="field">
@@ -671,24 +633,12 @@ function App() {
                   maxLength={4}
                   placeholder="새 PIN"
                   value={newPinInput}
-                  onChange={(event) => handlePinFormFieldChange(setNewPinInput, event)}
-                />
-              </label>
-              <label className="field">
-                <span>새 PIN 확인</span>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  placeholder="새 PIN 다시 입력"
-                  value={confirmPinInput}
-                  onChange={(event) => handlePinFormFieldChange(setConfirmPinInput, event)}
+                  onChange={(event) => handlePinChangeDigits(setNewPinInput, event)}
                 />
               </label>
               {pinChangeError ? <p className="error-text">{pinChangeError}</p> : null}
-              {pinChangeMessage ? <p className="helper-text">{pinChangeMessage}</p> : null}
-              <button type="button" className="secondary-button" onClick={handlePinUpdate}>
-                PIN 변경 저장
+              <button type="button" className="secondary-button" onClick={() => void handlePinChangeSave()}>
+                PIN 저장
               </button>
             </div>
           ) : null}
