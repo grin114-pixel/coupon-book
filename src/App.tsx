@@ -26,6 +26,7 @@ type CouponFormState = {
 }
 
 const AUTH_STORAGE_KEY = 'coupon-book.remembered-auth'
+const PIN_STORAGE_KEY = 'coupon-book.pin'
 const DEFAULT_PIN = '1234'
 
 function getTodayInputValue() {
@@ -154,6 +155,13 @@ function App() {
   const [rememberDevice, setRememberDevice] = useState(false)
   const [pin, setPin] = useState('')
   const [authError, setAuthError] = useState('')
+  const [activePin, setActivePin] = useState(String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim())
+  const [isChangingPin, setIsChangingPin] = useState(false)
+  const [currentPinInput, setCurrentPinInput] = useState('')
+  const [newPinInput, setNewPinInput] = useState('')
+  const [confirmPinInput, setConfirmPinInput] = useState('')
+  const [pinChangeError, setPinChangeError] = useState('')
+  const [pinChangeMessage, setPinChangeMessage] = useState('')
   const [coupons, setCoupons] = useState<CouponView[]>([])
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false)
   const [dataError, setDataError] = useState('')
@@ -163,15 +171,17 @@ function App() {
   const [form, setForm] = useState<CouponFormState>(() => getEmptyForm())
   const [isSaving, setIsSaving] = useState(false)
 
-  const appPin = String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim()
+  const defaultPin = String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim()
   const supabaseReady = isSupabaseConfigured()
 
   useEffect(() => {
     const rememberedAuth = window.localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
+    const savedPin = window.localStorage.getItem(PIN_STORAGE_KEY)
     setRememberDevice(rememberedAuth)
     setIsAuthenticated(rememberedAuth)
+    setActivePin(savedPin || defaultPin)
     setIsCheckingRememberedAuth(false)
-  }, [])
+  }, [defaultPin])
 
   useEffect(() => {
     if (!statusMessage) {
@@ -184,6 +194,18 @@ function App() {
 
     return () => window.clearTimeout(timeoutId)
   }, [statusMessage])
+
+  useEffect(() => {
+    if (!pinChangeMessage) {
+      return undefined
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setPinChangeMessage('')
+    }, 2500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [pinChangeMessage])
 
   const loadCoupons = useCallback(async () => {
     if (!supabaseReady) {
@@ -284,7 +306,7 @@ function App() {
       return
     }
 
-    if (pin !== appPin) {
+    if (pin !== activePin) {
       setAuthError('PIN 번호가 일치하지 않습니다.')
       return
     }
@@ -314,6 +336,67 @@ function App() {
     if (authError) {
       setAuthError('')
     }
+  }
+
+  function handlePinFormFieldChange(
+    setter: (value: string) => void,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    setter(event.target.value.replace(/\D/g, '').slice(0, 4))
+
+    if (pinChangeError) {
+      setPinChangeError('')
+    }
+
+    if (pinChangeMessage) {
+      setPinChangeMessage('')
+    }
+  }
+
+  function resetPinChangeForm() {
+    setCurrentPinInput('')
+    setNewPinInput('')
+    setConfirmPinInput('')
+    setPinChangeError('')
+    setPinChangeMessage('')
+  }
+
+  function togglePinChangeForm() {
+    setIsChangingPin((current) => {
+      const nextValue = !current
+
+      if (!nextValue) {
+        resetPinChangeForm()
+      }
+
+      return nextValue
+    })
+  }
+
+  function handlePinUpdate() {
+    if (currentPinInput !== activePin) {
+      setPinChangeError('현재 PIN 번호가 일치하지 않습니다.')
+      return
+    }
+
+    if (newPinInput.length !== 4) {
+      setPinChangeError('새 PIN 4자리를 입력해 주세요.')
+      return
+    }
+
+    if (newPinInput !== confirmPinInput) {
+      setPinChangeError('새 PIN 확인 값이 일치하지 않습니다.')
+      return
+    }
+
+    window.localStorage.setItem(PIN_STORAGE_KEY, newPinInput)
+    setActivePin(newPinInput)
+    setPinChangeMessage('PIN 번호를 변경했어요.')
+    setCurrentPinInput('')
+    setNewPinInput('')
+    setConfirmPinInput('')
+    setPin('')
+    setAuthError('')
   }
 
   function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
@@ -506,9 +589,13 @@ function App() {
             <span>나의 쿠폰북</span>
           </div>
           <h1>4자리 PIN 입력</h1>
-          <p className="pin-subtitle">PIN 번호가 맞아야만 Supabase 데이터를 불러옵니다.</p>
           <label className="field">
-            <span>PIN 번호</span>
+            <span className="field-label-row">
+              <span>PIN 번호</span>
+              <button type="button" className="inline-button" onClick={togglePinChangeForm}>
+                {isChangingPin ? '닫기' : '변경하기'}
+              </button>
+            </span>
             <input
               type="password"
               inputMode="numeric"
@@ -519,6 +606,48 @@ function App() {
               onChange={handlePinChange}
             />
           </label>
+          {isChangingPin ? (
+            <div className="pin-change-panel">
+              <label className="field">
+                <span>현재 PIN</span>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="현재 PIN"
+                  value={currentPinInput}
+                  onChange={(event) => handlePinFormFieldChange(setCurrentPinInput, event)}
+                />
+              </label>
+              <label className="field">
+                <span>새 PIN</span>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="새 PIN"
+                  value={newPinInput}
+                  onChange={(event) => handlePinFormFieldChange(setNewPinInput, event)}
+                />
+              </label>
+              <label className="field">
+                <span>새 PIN 확인</span>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="새 PIN 다시 입력"
+                  value={confirmPinInput}
+                  onChange={(event) => handlePinFormFieldChange(setConfirmPinInput, event)}
+                />
+              </label>
+              {pinChangeError ? <p className="error-text">{pinChangeError}</p> : null}
+              {pinChangeMessage ? <p className="helper-text">{pinChangeMessage}</p> : null}
+              <button type="button" className="secondary-button" onClick={handlePinUpdate}>
+                PIN 변경 저장
+              </button>
+            </div>
+          ) : null}
           <label className="checkbox-row">
             <input
               type="checkbox"
@@ -531,7 +660,6 @@ function App() {
           <button type="submit" className="primary-button">
             입장하기
           </button>
-          <p className="helper-text">기본 PIN은 `.env`에 설정한 `VITE_APP_PIN` 값을 사용합니다.</p>
         </form>
       </div>
     )

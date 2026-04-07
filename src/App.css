@@ -74,6 +74,13 @@
   font-weight: 600;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .field input {
   width: 100%;
   box-sizing: border-box;
@@ -179,6 +186,26 @@
   background: transparent;
   color: #7c3aed;
   font-weight: 700;
+}
+
+.inline-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #7c3aed;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pin-change-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .app-shell {
