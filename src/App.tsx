@@ -6,6 +6,7 @@ import {
   isSupabaseConfigured,
   storageBucket,
 } from './lib/supabase'
+import { hashPin } from './lib/pin'
 
 type CouponRecord = Database['public']['Tables']['coupons']['Row']
 
@@ -26,8 +27,9 @@ type CouponFormState = {
 }
 
 const AUTH_STORAGE_KEY = 'coupon-book.remembered-auth'
-const PIN_STORAGE_KEY = 'coupon-book.pin'
+const PIN_HASH_STORAGE_KEY = 'coupon-book.pin-hash'
 const DEFAULT_PIN = '1234'
+const SETTINGS_ROW_ID = 'global'
 
 function getTodayInputValue() {
   const today = new Date()
@@ -155,7 +157,7 @@ function App() {
   const [rememberDevice, setRememberDevice] = useState(false)
   const [pin, setPin] = useState('')
   const [authError, setAuthError] = useState('')
-  const [activePin, setActivePin] = useState(String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim())
+  const [activePinHash, setActivePinHash] = useState<string | null>(null)
   const [isChangingPin, setIsChangingPin] = useState(false)
   const [currentPinInput, setCurrentPinInput] = useState('')
   const [newPinInput, setNewPinInput] = useState('')
@@ -175,12 +177,14 @@ function App() {
   const defaultPin = String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim()
   const supabaseReady = isSupabaseConfigured()
 
+  const defaultPinHashPromise = useMemo(() => hashPin(defaultPin), [defaultPin])
+
   useEffect(() => {
     const rememberedAuth = window.localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
-    const savedPin = window.localStorage.getItem(PIN_STORAGE_KEY)
+    const savedPinHash = window.localStorage.getItem(PIN_HASH_STORAGE_KEY)
     setRememberDevice(rememberedAuth)
     setIsAuthenticated(rememberedAuth)
-    setActivePin(savedPin || defaultPin)
+    setActivePinHash(savedPinHash)
     setIsCheckingRememberedAuth(false)
   }, [defaultPin])
 
@@ -238,6 +242,59 @@ function App() {
       setIsLoadingCoupons(false)
     }
   }, [supabaseReady])
+
+  const ensureRemotePinHash = useCallback(async () => {
+    const fallbackHash = await defaultPinHashPromise
+
+    if (!supabaseReady) {
+      return fallbackHash
+    }
+
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('pin_hash')
+      .eq('id', SETTINGS_ROW_ID)
+      .maybeSingle()
+
+    if (error) {
+      throw error
+    }
+
+    if (data?.pin_hash) {
+      return data.pin_hash
+    }
+
+    const { error: upsertError } = await supabase.from('app_settings').upsert({
+      id: SETTINGS_ROW_ID,
+      pin_hash: fallbackHash,
+    })
+
+    if (upsertError) {
+      throw upsertError
+    }
+
+    return fallbackHash
+  }, [defaultPinHashPromise, supabaseReady])
+
+  const resolveExpectedPinHash = useCallback(async () => {
+    try {
+      const remoteHash = await ensureRemotePinHash()
+      window.localStorage.setItem(PIN_HASH_STORAGE_KEY, remoteHash)
+      setActivePinHash(remoteHash)
+      return remoteHash
+    } catch {
+      const saved = window.localStorage.getItem(PIN_HASH_STORAGE_KEY)
+      if (saved) {
+        setActivePinHash(saved)
+        return saved
+      }
+
+      const fallback = await defaultPinHashPromise
+      setActivePinHash(fallback)
+      return fallback
+    }
+  }, [defaultPinHashPromise, ensureRemotePinHash])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -299,7 +356,7 @@ function App() {
     setIsModalOpen(true)
   }
 
-  function handlePinSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handlePinSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     if (pin.length !== 4) {
@@ -307,8 +364,16 @@ function App() {
       return
     }
 
-    if (pin !== activePin) {
-      setAuthError('PIN 번호가 일치하지 않습니다.')
+    try {
+      const expectedHash = await resolveExpectedPinHash()
+      const inputHash = await hashPin(pin)
+
+      if (inputHash !== expectedHash) {
+        setAuthError('PIN 번호가 일치하지 않습니다.')
+        return
+      }
+    } catch {
+      setAuthError('PIN 확인 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.')
       return
     }
 
@@ -375,29 +440,52 @@ function App() {
   }
 
   function handlePinUpdate() {
-    if (currentPinInput !== activePin) {
-      setPinChangeError('현재 PIN 번호가 일치하지 않습니다.')
-      return
-    }
+    void (async () => {
+      try {
+        const expectedHash = activePinHash ?? (await resolveExpectedPinHash())
+        const currentHash = await hashPin(currentPinInput)
 
-    if (newPinInput.length !== 4) {
-      setPinChangeError('새 PIN 4자리를 입력해 주세요.')
-      return
-    }
+        if (currentHash !== expectedHash) {
+          setPinChangeError('현재 PIN 번호가 일치하지 않습니다.')
+          return
+        }
 
-    if (newPinInput !== confirmPinInput) {
-      setPinChangeError('새 PIN 확인 값이 일치하지 않습니다.')
-      return
-    }
+        if (newPinInput.length !== 4) {
+          setPinChangeError('새 PIN 4자리를 입력해 주세요.')
+          return
+        }
 
-    window.localStorage.setItem(PIN_STORAGE_KEY, newPinInput)
-    setActivePin(newPinInput)
-    setPinChangeMessage('PIN 번호를 변경했어요.')
-    setCurrentPinInput('')
-    setNewPinInput('')
-    setConfirmPinInput('')
-    setPin('')
-    setAuthError('')
+        if (newPinInput !== confirmPinInput) {
+          setPinChangeError('새 PIN 확인 값이 일치하지 않습니다.')
+          return
+        }
+
+        const nextHash = await hashPin(newPinInput)
+
+        if (supabaseReady) {
+          const supabase = getSupabaseClient()
+          const { error } = await supabase.from('app_settings').upsert({
+            id: SETTINGS_ROW_ID,
+            pin_hash: nextHash,
+          })
+
+          if (error) {
+            throw error
+          }
+        }
+
+        window.localStorage.setItem(PIN_HASH_STORAGE_KEY, nextHash)
+        setActivePinHash(nextHash)
+        setPinChangeMessage('PIN 번호를 변경했어요.')
+        setCurrentPinInput('')
+        setNewPinInput('')
+        setConfirmPinInput('')
+        setPin('')
+        setAuthError('')
+      } catch (error) {
+        setPinChangeError(getErrorMessage(error))
+      }
+    })()
   }
 
   function handleNameChange(event: ChangeEvent<HTMLInputElement>) {

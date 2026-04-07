@@ -27,6 +27,43 @@ before update on public.coupons
 for each row
 execute function public.set_updated_at();
 
+create table if not exists public.app_settings (
+  id text primary key,
+  pin_hash text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+drop trigger if exists app_settings_set_updated_at on public.app_settings;
+create trigger app_settings_set_updated_at
+before update on public.app_settings
+for each row
+execute function public.set_updated_at();
+
+alter table public.app_settings enable row level security;
+
+drop policy if exists "public settings select" on public.app_settings;
+create policy "public settings select"
+on public.app_settings
+for select
+to public
+using (true);
+
+drop policy if exists "public settings insert" on public.app_settings;
+create policy "public settings insert"
+on public.app_settings
+for insert
+to public
+with check (true);
+
+drop policy if exists "public settings update" on public.app_settings;
+create policy "public settings update"
+on public.app_settings
+for update
+to public
+using (true)
+with check (true);
+
 alter table public.coupons enable row level security;
 
 drop policy if exists "public coupon select" on public.coupons;

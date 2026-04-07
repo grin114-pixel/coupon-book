@@ -3,6 +3,27 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 export type Database = {
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: string
+          pin_hash: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          pin_hash: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          pin_hash?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           id: string
