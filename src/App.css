@@ -1,0 +1,522 @@
+.auth-shell,
+.app-shell {
+  min-height: 100vh;
+}
+
+.auth-shell {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.pin-card,
+.notice-card,
+.summary-card,
+.coupon-card,
+.modal-card,
+.empty-state {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.pin-card {
+  width: min(100%, 420px);
+  border-radius: 28px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-badge,
+.topbar-title,
+.coupon-card-body,
+.coupon-meta,
+.corner-actions,
+.modal-actions,
+.checkbox-row,
+.preview-panel,
+.coupon-visual,
+.coupon-placeholder,
+.empty-illustration,
+.app-icon,
+.fab-button,
+.complete-button,
+.icon-button {
+  display: flex;
+  align-items: center;
+}
+
+.app-badge,
+.eyebrow {
+  color: #7c3aed;
+}
+
+.app-badge {
+  gap: 10px;
+  font-weight: 700;
+}
+
+.app-badge svg,
+.app-icon svg,
+.empty-illustration svg {
+  width: 24px;
+  height: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d8dee9;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font: inherit;
+  color: #0f172a;
+}
+
+.field input:focus,
+.primary-button:focus,
+.secondary-button:focus,
+.text-button:focus,
+.fab-button:focus,
+.icon-button:focus,
+.complete-button:focus {
+  outline: 3px solid rgba(124, 58, 237, 0.15);
+  outline-offset: 2px;
+}
+
+.checkbox-row {
+  gap: 10px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+}
+
+.helper-text,
+.pin-subtitle,
+.coupon-expiry,
+.notice-card p,
+.empty-state p {
+  color: #64748b;
+  margin: 0;
+}
+
+.error-text {
+  color: #dc2626;
+  margin: 0;
+  font-weight: 600;
+}
+
+.primary-button,
+.secondary-button,
+.text-button,
+.complete-button,
+.icon-button,
+.fab-button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.icon-button:hover,
+.text-button:hover,
+.complete-button:hover,
+.fab-button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button,
+.secondary-button {
+  justify-content: center;
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-weight: 700;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.28);
+}
+
+.primary-button:disabled,
+.fab-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary-button {
+  background: #fff;
+  color: #334155;
+  border: 1px solid #d8dee9;
+}
+
+.text-button {
+  align-self: flex-start;
+  padding: 0;
+  background: transparent;
+  color: #7c3aed;
+  font-weight: 700;
+}
+
+.app-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 20px 110px;
+  box-sizing: border-box;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.topbar-title {
+  gap: 14px;
+}
+
+.topbar h1,
+.pin-card h1,
+.modal-header h2,
+.summary-card h2,
+.empty-state h2,
+.notice-card h2 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.app-icon,
+.empty-illustration {
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(37, 99, 235, 0.14));
+  color: #7c3aed;
+}
+
+.notice-card,
+.summary-card,
+.empty-state {
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.notice-card {
+  margin-bottom: 16px;
+}
+
+.error-card {
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.toast-message {
+  position: sticky;
+  top: 16px;
+  z-index: 5;
+  margin-bottom: 16px;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 16px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.summary-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.summary-count {
+  margin: 0;
+  color: #475569;
+  font-weight: 700;
+}
+
+.coupon-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-heading {
+  margin: 8px 4px 0;
+  color: #0f172a;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+}
+
+.coupon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.coupon-card {
+  position: relative;
+  border-radius: 28px;
+  padding: 20px 18px 18px;
+}
+
+.coupon-card-body {
+  gap: 16px;
+  align-items: stretch;
+}
+
+.coupon-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.coupon-meta {
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.muted-chip {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.coupon-copy h3 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 1.15rem;
+}
+
+.coupon-amount {
+  margin: 0 0 6px;
+  color: #111827;
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+
+.coupon-visual {
+  justify-content: center;
+  width: 98px;
+  min-width: 98px;
+}
+
+.coupon-visual img,
+.coupon-placeholder {
+  width: 98px;
+  height: 98px;
+  border-radius: 22px;
+}
+
+.coupon-visual img {
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.coupon-placeholder {
+  justify-content: center;
+  background: linear-gradient(135deg, #ede9fe, #dbeafe);
+  color: #6366f1;
+}
+
+.coupon-placeholder svg {
+  width: 34px;
+  height: 34px;
+}
+
+.corner-actions {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  gap: 8px;
+}
+
+.icon-button {
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  background: #fff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.icon-button svg,
+.complete-button svg,
+.fab-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.complete-button {
+  margin-top: 16px;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 800;
+  border: 1px solid #e2e8f0;
+}
+
+.empty-state {
+  text-align: center;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+
+.fab-button {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: #fff;
+  box-shadow: 0 20px 38px rgba(37, 99, 235, 0.28);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 20;
+}
+
+.modal-card {
+  width: min(100%, 520px);
+  border-radius: 28px;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.coupon-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preview-panel {
+  justify-content: space-between;
+  gap: 14px;
+  border-radius: 18px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.preview-panel img {
+  width: 84px;
+  height: 84px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .pin-card,
+  .modal-card,
+  .notice-card,
+  .summary-card,
+  .empty-state,
+  .coupon-card {
+    border-radius: 22px;
+  }
+
+  .app-shell {
+    padding: 18px 14px 100px;
+  }
+
+  .topbar,
+  .summary-card,
+  .coupon-card-body,
+  .preview-panel,
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .topbar {
+    align-items: stretch;
+  }
+
+  .coupon-visual {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .complete-button,
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+
+  .modal-actions {
+    align-items: stretch;
+  }
+}

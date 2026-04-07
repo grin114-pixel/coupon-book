@@ -1,0 +1,18 @@
+{
+  "name": "나의 쿠폰북",
+  "short_name": "쿠폰북",
+  "description": "PIN 인증 후 사용하는 개인 쿠폰 관리 PWA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fbff",
+  "theme_color": "#7c3aed",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
