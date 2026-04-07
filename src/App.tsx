@@ -180,10 +180,9 @@ function App() {
   const defaultPinHashPromise = useMemo(() => hashPin(defaultPin), [defaultPin])
 
   useEffect(() => {
-    const rememberedAuth = window.localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
     const savedPinHash = window.localStorage.getItem(PIN_HASH_STORAGE_KEY)
-    setRememberDevice(rememberedAuth)
-    setIsAuthenticated(rememberedAuth)
+    setRememberDevice(false)
+    setIsAuthenticated(true)
     setActivePinHash(savedPinHash)
     setIsCheckingRememberedAuth(false)
   }, [defaultPin])
