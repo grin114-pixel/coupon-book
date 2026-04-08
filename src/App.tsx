@@ -711,7 +711,6 @@ function App() {
                 <BookIcon />
                 <span>나의 쿠폰북</span>
               </div>
-              <h1>4자리 PIN 입력</h1>
               <label className="field">
                 <span>PIN 번호</span>
                 <input
