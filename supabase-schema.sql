@@ -63,53 +63,6 @@ before update on public.app_settings
 for each row
 execute function public.set_updated_at();
 
-create table if not exists public.push_subscriptions (
-  id uuid primary key default gen_random_uuid(),
-  endpoint text not null unique,
-  p256dh text not null,
-  auth text not null,
-  user_agent text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-drop trigger if exists push_subscriptions_set_updated_at on public.push_subscriptions;
-create trigger push_subscriptions_set_updated_at
-before update on public.push_subscriptions
-for each row
-execute function public.set_updated_at();
-
-alter table public.push_subscriptions enable row level security;
-
-drop policy if exists "public push subscription insert" on public.push_subscriptions;
-create policy "public push subscription insert"
-on public.push_subscriptions
-for insert
-to public
-with check (true);
-
-drop policy if exists "public push subscription update" on public.push_subscriptions;
-create policy "public push subscription update"
-on public.push_subscriptions
-for update
-to public
-using (true)
-with check (true);
-
-drop policy if exists "public push subscription delete" on public.push_subscriptions;
-create policy "public push subscription delete"
-on public.push_subscriptions
-for delete
-to public
-using (true);
-
-drop policy if exists "public push subscription select" on public.push_subscriptions;
-create policy "public push subscription select"
-on public.push_subscriptions
-for select
-to public
-using (true);
-
 alter table public.app_settings enable row level security;
 
 drop policy if exists "public settings select" on public.app_settings;

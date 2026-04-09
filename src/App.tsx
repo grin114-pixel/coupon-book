@@ -27,20 +27,8 @@ type CouponFormState = {
 
 const AUTH_STORAGE_KEY = 'coupon-book.remembered-auth'
 const PIN_HASH_STORAGE_KEY = 'coupon-book.pin-hash'
-const PUSH_SUBSCRIPTION_STORAGE_KEY = 'coupon-book.push-subscription'
 const DEFAULT_PIN = '1234'
 const SETTINGS_ROW_ID = 'global'
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
-  for (let i = 0; i < rawData.length; i += 1) {
-    outputArray[i] = rawData.charCodeAt(i)
-  }
-  return outputArray
-}
 
 function getTodayInputValue() {
   const today = new Date()
@@ -143,12 +131,12 @@ function App() {
   const [currentPinInput, setCurrentPinInput] = useState('')
   const [newPinInput, setNewPinInput] = useState('')
   const [pinChangeError, setPinChangeError] = useState('')
-  const [pushStatus, setPushStatus] = useState<'unsupported' | 'idle' | 'enabled'>('idle')
   const [coupons, setCoupons] = useState<CouponView[]>([])
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false)
   const [dataError, setDataError] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [couponPendingDelete, setCouponPendingDelete] = useState<CouponView | null>(null)
   const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null)
   const [editingCoupon, setEditingCoupon] = useState<CouponView | null>(null)
   const [form, setForm] = useState<CouponFormState>(() => getEmptyForm())
@@ -156,7 +144,6 @@ function App() {
 
   const defaultPin = String(import.meta.env.VITE_APP_PIN ?? DEFAULT_PIN).trim()
   const supabaseReady = isSupabaseConfigured()
-  const vapidPublicKey = String(import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '').trim()
 
   const defaultPinHashPromise = useMemo(() => hashPin(defaultPin), [defaultPin])
 
@@ -166,22 +153,6 @@ function App() {
     setIsAuthenticated(rememberedAuth)
     setIsCheckingRememberedAuth(false)
   }, [defaultPin])
-
-  useEffect(() => {
-    const supported =
-      typeof window !== 'undefined' &&
-      'Notification' in window &&
-      'serviceWorker' in navigator &&
-      'PushManager' in window
-
-    if (!supported) {
-      setPushStatus('unsupported')
-      return
-    }
-
-    const saved = window.localStorage.getItem(PUSH_SUBSCRIPTION_STORAGE_KEY)
-    setPushStatus(saved ? 'enabled' : 'idle')
-  }, [])
 
   useEffect(() => {
     if (!statusMessage) {
@@ -425,70 +396,6 @@ function App() {
     setIsAuthenticated(true)
   }
 
-  async function ensurePushSubscription() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-      throw new Error('이 기기에서는 푸시 알림을 지원하지 않아요.')
-    }
-
-    if (!vapidPublicKey) {
-      throw new Error('VAPID Public Key가 설정되지 않았어요. (VITE_VAPID_PUBLIC_KEY)')
-    }
-
-    const permission = await Notification.requestPermission()
-    if (permission !== 'granted') {
-      throw new Error('알림 권한이 필요해요. (브라우저 설정에서 허용해 주세요.)')
-    }
-
-    const registration = await navigator.serviceWorker.ready
-    const existing = await registration.pushManager.getSubscription()
-    const subscription =
-      existing ??
-      (await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-      }))
-
-    window.localStorage.setItem(PUSH_SUBSCRIPTION_STORAGE_KEY, JSON.stringify(subscription))
-    await fetch('/api/register-push-subscription', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        subscription,
-        userAgent: navigator.userAgent,
-      }),
-    })
-    setPushStatus('enabled')
-    return subscription
-  }
-
-  async function sendTestPush() {
-    const subscription = await ensurePushSubscription()
-
-    const response = await fetch('/api/push-test', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        subscription,
-        message: '테스트 알림입니다.',
-        url: '/',
-      }),
-    })
-
-    if (!response.ok) {
-      const rawText = await response.text().catch(() => '')
-      const payload = (() => {
-        try {
-          return rawText ? (JSON.parse(rawText) as { error?: string }) : null
-        } catch {
-          return null
-        }
-      })()
-
-      const detail = payload?.error || rawText.trim().slice(0, 160)
-      throw new Error(detail || `푸시 발송에 실패했어요. (HTTP ${response.status})`)
-    }
-  }
-
   function handleLock() {
     window.localStorage.removeItem(AUTH_STORAGE_KEY)
     setRememberDevice(false)
@@ -636,12 +543,6 @@ function App() {
       return
     }
 
-    const confirmed = window.confirm('이 쿠폰을 삭제할까요?')
-
-    if (!confirmed) {
-      return
-    }
-
     setDataError('')
 
     try {
@@ -703,6 +604,9 @@ function App() {
                 <button type="button" className="secondary-button" onClick={() => void handlePinChangeSave()}>
                   PIN 저장
                 </button>
+                <button type="button" className="text-button" onClick={() => setIsChangingPin(false)}>
+                  로그인으로 돌아가기
+                </button>
               </div>
             </>
           ) : (
@@ -711,30 +615,19 @@ function App() {
                 <BookIcon />
                 <span>나의 쿠폰북</span>
               </div>
-              <label className="field">
-                <span>PIN 번호</span>
+              <div className="pin-entry-field">
                 <input
                   type="password"
                   inputMode="numeric"
-                  autoComplete="one-time-code"
+                  autoComplete="off"
                   maxLength={4}
                   placeholder="0000"
+                  aria-label="4자리 숫자 입력"
                   value={pin}
                   onChange={handlePinChange}
+                  className="pin-entry-input"
                 />
-              </label>
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  setIsChangingPin(true)
-                  setPinChangeError('')
-                  setCurrentPinInput('')
-                  setNewPinInput('')
-                }}
-              >
-                PIN 변경하기
-              </button>
+              </div>
               <label className="checkbox-row">
                 <input
                   type="checkbox"
@@ -746,6 +639,18 @@ function App() {
               {authError ? <p className="error-text">{authError}</p> : null}
               <button type="submit" className="primary-button">
                 입장하기
+              </button>
+              <button
+                type="button"
+                className="text-button pin-change-button"
+                onClick={() => {
+                  setIsChangingPin(true)
+                  setPinChangeError('')
+                  setCurrentPinInput('')
+                  setNewPinInput('')
+                }}
+              >
+                PIN 변경하기
               </button>
             </>
           )}
@@ -764,35 +669,6 @@ function App() {
           <h1>나의 쿠폰북</h1>
         </div>
         <div className="topbar-actions">
-          <button
-            type="button"
-            className="secondary-button lock-button"
-            aria-label={pushStatus === 'enabled' ? '테스트 알림 보내기' : '푸시 알림 켜기'}
-            onClick={() => {
-              void (async () => {
-                try {
-                  if (pushStatus === 'unsupported') {
-                    setStatusMessage('이 기기에서는 푸시 알림을 지원하지 않아요.')
-                    return
-                  }
-
-                  if (pushStatus === 'enabled') {
-                    await sendTestPush()
-                    setStatusMessage('테스트 알림을 보냈어요.')
-                    return
-                  }
-
-                  await ensurePushSubscription()
-                  setStatusMessage('푸시 알림을 켰어요. (다시 누르면 테스트 알림)')
-                } catch (error) {
-                  setStatusMessage(getErrorMessage(error))
-                }
-              })()
-            }}
-            disabled={pushStatus === 'unsupported'}
-          >
-            <BellIcon />
-          </button>
           <button type="button" className="secondary-button lock-button" aria-label="잠금" onClick={handleLock}>
             <LockIcon />
           </button>
@@ -884,7 +760,7 @@ function App() {
                             type="button"
                             className="icon-button"
                             aria-label="쿠폰 삭제"
-                            onClick={() => handleDeleteCoupon(coupon)}
+                            onClick={() => setCouponPendingDelete(coupon)}
                           >
                             <DeleteIcon />
                           </button>
@@ -969,6 +845,46 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {couponPendingDelete ? (
+        <div className="modal-overlay" role="presentation" onClick={() => setCouponPendingDelete(null)}>
+          <div className="modal-card" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">쿠폰 삭제</p>
+                <h2>이 쿠폰을 삭제할까요?</h2>
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="삭제 확인 닫기"
+                onClick={() => setCouponPendingDelete(null)}
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="secondary-button" onClick={() => setCouponPendingDelete(null)}>
+                취소
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  void (async () => {
+                    const target = couponPendingDelete
+                    setCouponPendingDelete(null)
+                    if (!target) return
+                    await handleDeleteCoupon(target)
+                  })()
+                }}
+              >
+                삭제하기
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -1128,27 +1044,6 @@ function LockIcon() {
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M12 3.75a4.6 4.6 0 0 1 4.6 4.6v2.1c0 1.7.6 3.3 1.7 4.6l.6.7H5.1l.6-.7a7.4 7.4 0 0 0 1.7-4.6v-2.1A4.6 4.6 0 0 1 12 3.75Z"
-        fill="none"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.7"
-      />
-      <path
-        d="M9.75 18.75a2.25 2.25 0 0 0 4.5 0"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.7"
       />
     </svg>
   )

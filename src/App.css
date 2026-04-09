@@ -59,6 +59,11 @@
   font-weight: 700;
 }
 
+.pin-card .app-badge span {
+  font-size: 121%;
+  font-weight: 800;
+}
+
 .app-badge svg,
 .app-icon svg,
 .empty-illustration svg {
@@ -120,6 +125,17 @@
   gap: 10px;
   color: #334155;
   font-weight: 600;
+}
+
+.pin-card .checkbox-row {
+  align-self: stretch;
+  justify-content: center;
+  width: 100%;
+}
+
+.pin-card .primary-button {
+  margin-top: 3rem;
+  margin-bottom: 2.5rem;
 }
 
 .checkbox-row input {
@@ -213,6 +229,40 @@
 
 .pin-change-panel button {
   width: 100%;
+}
+
+.pin-entry-field {
+  margin-top: 4.5rem;
+}
+
+.pin-entry-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d8dee9;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font: inherit;
+  color: #0f172a;
+  font-weight: 400;
+}
+
+.pin-entry-input:focus {
+  outline: 3px solid rgba(124, 58, 237, 0.15);
+  outline-offset: 2px;
+}
+
+.pin-change-button {
+  align-self: flex-end;
+  margin-top: 0;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 90%;
+}
+
+.pin-change-button:hover {
+  color: #475569;
 }
 
 .app-shell {
